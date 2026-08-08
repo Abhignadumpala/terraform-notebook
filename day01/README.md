@@ -2,188 +2,380 @@
 
 **Date:** Sunday, 12th July 2026
 
-My own notes as I start learning Terraform — written plain and simple, day by day.
+My own notes from Day 1 — written plain and simple, in the order I actually learned it.
 
 ---
 
-## What Is Terraform?
+## 1. What Is Infrastructure as Code (IaC)?
 
-Terraform is an **Infrastructure as Code (IaC) tool made by HashiCorp**.
+Infrastructure as Code means describing infrastructure — servers, networks, storage, databases — as configuration files, instead of setting it up manually by clicking through a cloud console.
 
-In simple terms: instead of logging into a cloud console and clicking buttons to create servers, storage, or networks, I write down what I want in a file — and Terraform creates it for me automatically.
+That configuration file becomes the record of what exists and why — the same way source code is the record of how an application works.
 
----
-
-## What Is Infrastructure as Code?
-
-Infrastructure as Code (IaC) means describing infrastructure — servers, networks, storage, databases — as configuration files, instead of setting it up manually through a console.
-
-That configuration file becomes the record of what exists and why, the same way source code is the record of how an application works.
-
----
-
-## Why This Matters
-
-Doing everything manually through a console has real downsides:
+**Problems it solves compared to clicking around a console:**
 - **No repeatability** — rebuilding the same setup by hand takes time and is easy to get wrong
 - **No version history** — console changes leave no trail of what changed or when
 - **No easy review** — there's no simple way to check a change before it goes live
 
-With IaC, the config file fixes all three: it can be reused, tracked in Git, and reviewed before anything actually happens.
+IaC fixes all three: the config can be reused, tracked in Git, and reviewed before anything actually happens.
 
 ---
 
-## Terraform vs Similar Tools
+## 2. What Is Terraform?
 
-- **OpenTofu** — an open-source fork of Terraform, works almost the same, just community-run instead of owned by HashiCorp.
-- **Pulumi** — same idea as Terraform, but you write actual code (Python, TypeScript, Go) instead of Terraform's own language.
-- **CloudFormation** — AWS's own version, but only works with AWS, no other cloud.
-- **Ansible** — a different job entirely: it configures software on servers that already exist, rather than creating the servers themselves.
+Terraform is an **Infrastructure as Code tool made by HashiCorp**.
+
+Instead of logging into a cloud console and clicking buttons to create servers, storage, or networks, I write down what I want in a `.tf` file — and Terraform creates it for me automatically.
 
 ---
 
-## Installing Terraform
+## 3. How Terraform Works — The Core Workflow
 
-Installed Terraform (latest version) using the [official install guide](https://developer.hashicorp.com/terraform/install).
+```
+  Write  ──▶  Init  ──▶  Plan  ──▶  Apply  ──▶  Destroy
+  (.tf)     (init)     (preview)   (create)    (clean up)
+```
 
-Verified it worked:
+- **Write** — describe the desired infrastructure in `.tf` files
+- **Init** — download the provider plugin(s) needed
+- **Plan** — preview exactly what will be created/changed/destroyed, before anything happens
+- **Apply** — actually create the infrastructure
+- **Destroy** — clean it up when no longer needed
+
+---
+
+## 4. Why Terraform Matters
+
+- **Declarative** — I describe *what* I want, not the step-by-step *how*. Terraform figures out the steps.
+- **Provider-agnostic** — same tool, same workflow, works across AWS, Azure, GCP, and hundreds of other platforms.
+- **Huge ecosystem** — massive library of providers and modules already written and shared by the community.
+- **State tracking** — Terraform always knows what it has already created, so it only changes what actually needs to change.
+
+---
+
+## 5. Terraform vs Similar Tools
+
+| Tool | How it compares |
+|---|---|
+| **OpenTofu** | Open-source fork of Terraform, works almost identically — community-run instead of HashiCorp-owned |
+| **Pulumi** | Same IaC idea, but config is written in real programming languages (Python, TypeScript, Go) instead of HCL |
+| **CloudFormation** | AWS's own native IaC tool — only works with AWS, no multi-cloud support |
+| **Ansible** | A different job entirely — configures software on servers that already exist, rather than creating the infrastructure itself |
+
+---
+
+## 6. Terraform Terminology — Quick Reference
+
+| Term | Meaning | Example |
+|---|---|---|
+| **Provider** | Plugin that lets Terraform talk to a specific platform | `provider "aws" { region = "eu-west-1" }` |
+| **Resource** | The actual thing being created | `resource "aws_instance" "my_server" { ... }` |
+| **State** | Terraform's record of what it currently manages, stored in `terraform.tfstate` | Tells Terraform "already exists" vs "needs creating" |
+| **Plan** | A preview of exactly what will change, before anything happens | Output of `terraform plan` |
+| **HCL** | HashiCorp Configuration Language — the syntax everything is written in | `.tf` files |
+| **Module** | A reusable, packaged group of Terraform config | Avoids rewriting the same setup repeatedly |
+
+---
+
+## 7. Installing Terraform
+
+Installed using the [official install guide](https://developer.hashicorp.com/terraform/install), then verified:
+
 ```bash
-terraform version
+terraform --version
 ```
 ```
-sri-abhi@sri-abhi-ThinkCentre-M900:~/terraform$ terraform --version
 Terraform v1.15.8
 on linux_amd64
 + provider registry.terraform.io/hashicorp/aws v6.58.0
-
-
-```bash
-terraform -help
-```
-```
-sri-abhi@sri-abhi-ThinkCentre-M900:~/terraform$ terraform --help
-Usage: terraform [global options] <subcommand> [args]
-
-The available commands for execution are listed below.
-The primary workflow commands are given first, followed by
-less common or more advanced commands.
-
-Main commands:
-  init          Prepare your working directory for other commands
-  validate      Check whether the configuration is valid
-  plan          Show changes required by the current configuration
-  apply         Create or update infrastructure
-  destroy       Destroy previously-created infrastructure
-
-All other commands:
-  console       Try Terraform expressions at an interactive command prompt
-  fmt           Reformat your configuration in the standard style
-  force-unlock  Release a stuck lock on the current workspace
-  get           Install or upgrade remote Terraform modules
-  graph         Generate a Graphviz graph of the steps in an operation
-  import        Associate existing infrastructure with a Terraform resource
-  login         Obtain and save credentials for a remote host
-  logout        Remove locally-stored credentials for a remote host
-  metadata      Metadata related commands
-  modules       Show all declared modules in a working directory
-  output        Show output values from your root module
-  providers     Show the providers required for this configuration
-  query         Search and list remote infrastructure with Terraform
-  refresh       Update the state to match remote systems
-  show          Show the current state or a saved plan
-  stacks        Manage HCP Terraform stack operations
-  state         Advanced state management
-  taint         Mark a resource instance as not fully functional
-  test          Execute integration tests for Terraform modules
-  untaint       Remove the 'tainted' state from a resource instance
-  version       Show the current Terraform version
-  workspace     Workspace management
-
-Global options (use these before the subcommand, if any):
-  -chdir=DIR    Switch to a different working directory before executing the
-                given subcommand.
-  -help         Show this help output or the help for a specified subcommand.
-  -version      An alias for the "version" subcommand.
-sri-abhi@sri-abhi-ThinkCentre-M900:~/terraform$ 
-
 ```
 
-Also installed the HashiCorp Terraform extension in VS Code, for syntax highlighting and autocomplete.
-
-![Terraform version output](images/terraform-version.png)
+Also installed the **HashiCorp Terraform extension** in VS Code for syntax highlighting and autocomplete.
 
 ---
 
-## Key Terms I Need to Know
+## 8. Hands-On Lab 1 — Local Provider (No Cloud Needed)
 
-**Provider** — a plugin that lets Terraform talk to a specific platform (AWS, Azure, etc).
+Started with the `local` provider — no cloud account, no cost, no credentials needed. Good for learning the workflow risk-free.
+
+### 8.1 — Writing `main.tf`
+
 ```hcl
+resource "local_file" "my_file" {
+  filename = "automate.txt"
+  content  = " this is automated file created with terraform"
+}
+```
+
+![main.tf with local_file resource](images/01-local-file-main-tf.png)
+
+### 8.2 — `terraform init`
+
+Downloads the `local` provider and sets up the working directory.
+
+![terraform init output](images/02-terraform-init-local.png)
+
+```
+Initializing provider plugins...
+- Finding latest version of hashicorp/local...
+- Installing hashicorp/local v2.9.0...
+- Installed hashicorp/local v2.9.0 (signed by HashiCorp)
+
+Terraform has been successfully initialized!
+```
+
+### 8.3 — `terraform validate` + `terraform plan`
+
+`validate` checks the config for syntax errors. `plan` previews what will happen — in this case, one file will be created.
+
+![validate and plan output](images/03-validate-plan-apply.png)
+
+```
+Success! The configuration is valid.
+
+Terraform will perform the following actions:
+
+  # local_file.my_file will be created
+  + resource "local_file" "my_file" {
+      + content  = " this is automated file created with terraform"
+      + filename = "automate.txt"
+      ...
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+```
+
+### 8.4 — `terraform apply`
+
+Confirmed with `yes` — Terraform created the actual file.
+
+![terraform apply confirmation](images/04-apply-confirm-yes.png)
+
+```
+Do you want to perform these actions?
+  Enter a value: yes
+
+local_file.my_file: Creating...
+local_file.my_file: Creation complete after 0s [id=4b8cea36eeaeb07f450ca0e530ca36d06399208e]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+```
+
+### 8.5 — Verifying + `terraform destroy`
+
+```bash
+cat automate.txt
+```
+```
+this is automated file created with terraform
+```
+
+Then ran `terraform destroy` to clean up. (First attempt was cancelled on purpose to check the confirmation prompt — Terraform never destroys without an explicit `yes`.)
+
+![cat output and destroy prompt](images/05-cat-output-destroy-cancel.png)
+
+```
+Terraform will perform the following actions:
+
+  # local_file.my_file will be destroyed
+  - resource "local_file" "my_file" { ... }
+
+Plan: 0 to add, 0 to change, 1 to destroy.
+
+Do you really want to destroy all resources?
+  Enter a value: y
+
+Destroy cancelled.
+```
+
+**Key takeaway:** the full `init → validate → plan → apply → destroy` cycle worked end to end, and nothing ever gets created or destroyed without an explicit confirmation.
+
+---
+
+## 9. Hands-On Lab 2 — Setting Up the AWS Provider
+
+### 9.1 — `terraform.tf`
+
+```hcl
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.58.0"
+    }
+  }
+}
+
 provider "aws" {
-  region = "us-east-1"
+  # Configuration options
 }
 ```
 
-**Resource** — the actual thing being created.
-```hcl
-resource "aws_instance" "my_server" {
-  ami           = "ami-0123456789"
-  instance_type = "t2.micro"
-}
+![terraform.tf with AWS provider block](images/06-terraform-tf-aws-provider.png)
+
+- **`terraform` block** — settings for Terraform itself. `required_providers` tells it which provider plugins this project needs.
+  - `source` — where to download the provider from (`hashicorp/aws` = shorthand for `registry.terraform.io/hashicorp/aws`)
+  - `version` — pins the exact provider version for consistent behaviour every time
+- **`provider "aws"` block** — actually configures the provider (region, credentials, etc.)
+
+### 9.2 — `terraform init` (AWS)
+
+```
+Initializing provider plugins...
+- Finding hashicorp/aws versions matching "6.58.0"...
+- Installing hashicorp/aws v6.58.0...
+- Installed hashicorp/aws v6.58.0 (signed by HashiCorp)
+
+Terraform has created a lock file .terraform.lock.hcl to record the provider
+selections it made above.
+
+Terraform has been successfully initialized!
 ```
 
-**State** — Terraform's record of what it currently manages, stored in `terraform.tfstate`. This is how it knows the difference between "doesn't exist yet" and "already exists."
+![terraform init downloading AWS provider](images/07-terraform-init-aws.png)
 
-**Plan** — a preview of exactly what will change, shown before anything actually happens.
+### 9.3 — Understanding the `.terraform/providers/` Folder Structure
 
-**HCL** — HashiCorp Configuration Language, the syntax all of this is written in.
+When `terraform init` runs, it downloads the provider plugin and stores it in a structured local cache folder:
 
-**Module** — a reusable, packaged group of config, so I don't rewrite the same setup every time.
+```
+.terraform/providers/registry.terraform.io/hashicorp/aws/6.58.0/linux_amd64/
+```
 
----
+![Exploring the .terraform/providers folder](images/08-terraform-providers-folder-structure.png)
 
-## My First Hands-On Example
+| Folder | What it means |
+|---|---|
+| `.terraform/` | Terraform's local working directory — created automatically after `init`. Holds provider plugins, module cache, backend state info. **Not committed to git.** |
+| `providers/` | Sub-folder specifically for downloaded provider plugins |
+| `registry.terraform.io/` | The registry the provider came from — matches the `source` value in `required_providers` |
+| `hashicorp/` | The **namespace** — the publisher/organization maintaining the provider |
+| `aws/` | The provider name itself |
+| `6.58.0/` | The exact version installed, matching what was pinned |
+| `linux_amd64/` | The platform/architecture build matched to my machine |
 
-Used a simple starter example with the `local` and `random` providers — no cloud account needed, no cost involved.
+Inside the final folder sits the **actual provider binary** — a compiled executable Terraform runs in the background to make real API calls to AWS. The `linux_amd64/` folder name just tells you *which build* of that binary was downloaded (a Mac M1 would get a `darwin_arm64/` build instead) — it's not a separate thing from "the provider," it *is* the provider.
+
+**Why `.terraform/` is gitignored:**
+It's just a local copy of downloaded software — similar to `node_modules/` in JavaScript or `venv/` in Python. It doesn't need to be tracked because it's fully regenerable: anyone who clones the repo and runs `terraform init` gets the exact same folder back, because `.terraform.lock.hcl` (which *is* committed) tells Terraform precisely which version to re-download.
+
+`.gitignore` entry used:
+```
+.terraform/
+*.tfstate
+*.tfstate.backup
+```
+
+### 9.4 — AWS CLI Installed & Verified
+
+Installed AWS CLI v2 using the official zip installer method (not the piped `curl | bash` shortcut, to avoid running an unreviewed script).
 
 ```bash
-cd example
-terraform init      # download providers, set up the working directory
-terraform fmt       # format the code
-terraform validate  # check for syntax errors
-terraform plan      # preview what will be created
-terraform apply     # create it (typed: yes)
-cat greeting.txt    # see the file Terraform generated
-terraform destroy   # clean it up (typed: yes)
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
 ```
 
-**Output:**
+![aws --version output](images/09-aws-cli-version.png)
+
 ```
-[paste actual terminal output here]
+aws-cli/2.36.19 Python/3.14.6 Linux/7.0.0-29-generic exe/x86_64.ubuntu.26
 ```
 
-![Terraform apply output](images/terraform-apply.png)
+**IAM user setup (not root):**
+Created a dedicated IAM user (`abhiterrauser`) with an access key instead of using root credentials, then ran:
+```bash
+aws configure
+aws sts get-caller-identity
+```
+```json
+{
+    "UserId": "AIDAQBKCDSOL3JUSNWFGB",
+    "Account": "002823000983",
+    "Arn": "arn:aws:iam::002823000983:user/abhiterrauser"
+}
+```
+Confirms the CLI (and therefore Terraform) authenticates as the IAM user, not root — root access keys were deactivated afterward.
+
+### 9.5 — The `.terraform.lock.hcl` File
+
+```bash
+cat .terraform.lock.hcl
+```
+
+![Lock file contents](images/10-lock-file-contents.png)
+
+```hcl
+# This file is maintained automatically by "terraform init".
+# Manual edits may be lost in future updates.
+
+provider "registry.terraform.io/hashicorp/aws" {
+  version     = "6.58.0"
+  constraints = "6.58.0"
+  hashes = [
+    "h1:UFot9S97tuAPvjKvoxm08sDG/gKYdDK+lMwsZKtLieY=",
+    "zh:1221253beee5629fb503d79cebc9bc661279cbc4be5d01db9ab4c1b702108250",
+    ... (additional hashes, one per platform)
+  ]
+}
+```
+
+**What this does:** locks the exact provider version *and* verifies its integrity via checksums (`hashes`). It's small, plain text, and safe to commit — it's the "recipe" that lets `terraform init` recreate the exact same `.terraform/` folder on any machine.
 
 ---
 
-## The Core Workflow
+## 10. How Terraform Talks to AWS — Step by Step
 
 ```
-Write  ──▶  Init  ──▶  Plan  ──▶  Apply  ──▶  Destroy
-(.tf)     (init)     (preview)   (create)    (clean up)
+Your .tf files
+     ↓
+Terraform CLI (reads your config)
+     ↓
+Provider binary (downloaded during init)
+     ↓
+AWS API (over the internet)
+     ↓
+Resource created in AWS account
+     ↓
+Result saved into terraform.tfstate
 ```
+
+1. **Write configuration** — `.tf` files describe the desired provider and resources. Just text — nothing happens yet.
+2. **`terraform init`** — downloads the AWS provider binary and stores it locally. This binary is the translator that knows how to speak AWS's API language.
+3. **`terraform plan`** — Terraform CLI launches the provider binary as a background process. The binary authenticates using AWS credentials (from `aws configure` / env vars) and sends **read-only** API calls ("does this already exist? what's the current state?"). Terraform compares desired config vs AWS's actual state and shows what *would* change — nothing is created yet.
+4. **`terraform apply`** — after confirming, the provider binary sends **write** API calls (`CreateBucket`, `RunInstances`, etc.). AWS creates the real resource and returns details (ID, ARN, IP). The provider binary passes this back to Terraform CLI.
+5. **State gets recorded** — everything created gets saved into `terraform.tfstate`, which becomes Terraform's memory of what it manages, so future `plan`/`apply` runs know what already exists vs what's new.
+
+**Key point:** Terraform CLI never talks to AWS directly — it always goes through the provider binary, which is the only piece that knows how to construct valid AWS API requests.
 
 ---
 
-## Extra Things I Looked Into
+## 11. OpenTofu — Quick Look
+
+Briefly explored [OpenTofu](https://opentofu.org/), the open-source, Linux Foundation–governed fork of Terraform. It's a drop-in replacement — same HCL syntax, same core workflow (`init` → `plan` → `apply`), same `required_providers` / `provider` block structure.
+
+![OpenTofu homepage](images/11-opentofu-website.png)
+
+Day-to-day, the experience is nearly identical to Terraform — the main difference is who governs the project (community/Linux Foundation vs HashiCorp).
+
+---
+
+## 12. Bonus / Extra Exploration
 
 - Set up tab completion for the CLI: `terraform -install-autocomplete`
-- Looked briefly at OpenTofu — nearly identical to Terraform day-to-day
-- Looked at the `.terraform.lock.hcl` file — it locks the exact provider versions used, so the same config gives the same result every time, on any machine
+- Explored `.terraform.lock.hcl` in depth (see section 9.5)
+- Explored the `.terraform/providers/` cache structure in depth (see section 9.3)
 
 ---
 
-## Day 1 Wrap-Up
+## 13. Day 1 Wrap-Up
 
-Foundations done — I understand what Terraform is, why IaC matters, and ran my first full `init → plan → apply → destroy` cycle.
+Foundations done:
+- Understand what Terraform and IaC are, and why they matter
+- Ran a full `init → validate → plan → apply → destroy` cycle with the `local` provider
+- Set up the AWS provider, understood exactly how the provider binary gets downloaded and how it talks to AWS
+- Installed and configured AWS CLI using a dedicated IAM user (not root)
+- Understand the role of `.terraform/` vs `.terraform.lock.hcl` and why one is gitignored and the other isn't
 
 Next up: Day 2.

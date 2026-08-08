@@ -1,6 +1,5 @@
 # 🌱 Day 1 — Introduction to Terraform & Infrastructure as Code
 
-**Date:** Sunday, 12th July 2026
 
 My own notes from Day 1 — written plain and simple, in the order I actually learned it.
 

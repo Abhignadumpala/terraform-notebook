@@ -1,5 +1,6 @@
 # 🌱 Day 1 — Introduction to Terraform & Infrastructure as Code
 
+**Date:** Sunday, 12th July 2026
 
 My own notes from Day 1 — written plain and simple, in the order I actually learned it.
 
@@ -108,11 +109,11 @@ resource "local_file" "my_file" {
 
 ![main.tf with local_file resource](images/01-local-file-main-tf.png)
 
-### 8.2 — `terraform init`
+### 8.2 — `terraform init` + `terraform validate`
 
-Downloads the `local` provider and sets up the working directory.
+`init` downloads the `local` provider and sets up the working directory. `validate` checks the config for syntax errors.
 
-![terraform init output](images/02-terraform-init-local.png)
+![terraform init and validate output](images/02-terraform-init-validate.png)
 
 ```
 Initializing provider plugins...
@@ -121,17 +122,18 @@ Initializing provider plugins...
 - Installed hashicorp/local v2.9.0 (signed by HashiCorp)
 
 Terraform has been successfully initialized!
-```
 
-### 8.3 — `terraform validate` + `terraform plan`
-
-`validate` checks the config for syntax errors. `plan` previews what will happen — in this case, one file will be created.
-
-![validate and plan output](images/03-validate-plan-apply.png)
-
-```
+sri-abhi@sri-abhi-ThinkCentre-M900:~/terraform-local-lab$ terraform validate
 Success! The configuration is valid.
+```
 
+### 8.3 — `terraform plan`
+
+Previews exactly what will happen before anything is actually created — in this case, one file will be added.
+
+![terraform plan output](images/03-terraform-plan.png)
+
+```
 Terraform will perform the following actions:
 
   # local_file.my_file will be created
@@ -148,7 +150,7 @@ Plan: 1 to add, 0 to change, 0 to destroy.
 
 Confirmed with `yes` — Terraform created the actual file.
 
-![terraform apply confirmation](images/04-apply-confirm-yes.png)
+![terraform apply success](images/04-terraform-apply-success.png)
 
 ```
 Do you want to perform these actions?
@@ -160,18 +162,19 @@ local_file.my_file: Creation complete after 0s [id=4b8cea36eeaeb07f450ca0e530ca3
 Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
 ```
 
-### 8.5 — Verifying + `terraform destroy`
-
+Verified the file was really created:
 ```bash
 cat automate.txt
 ```
 ```
-this is automated file created with terraform
+ this is automated file created with terraform
 ```
 
-Then ran `terraform destroy` to clean up. (First attempt was cancelled on purpose to check the confirmation prompt — Terraform never destroys without an explicit `yes`.)
+### 8.5 — `terraform destroy`
 
-![cat output and destroy prompt](images/05-cat-output-destroy-cancel.png)
+Ran `terraform destroy` and confirmed with `yes` — Terraform removed the exact resource it had created, and nothing else.
+
+![terraform destroy success](images/05-terraform-destroy-success.png)
 
 ```
 Terraform will perform the following actions:
@@ -182,12 +185,15 @@ Terraform will perform the following actions:
 Plan: 0 to add, 0 to change, 1 to destroy.
 
 Do you really want to destroy all resources?
-  Enter a value: y
+  Enter a value: yes
 
-Destroy cancelled.
+local_file.my_file: Destroying... [id=4b8cea36eeaeb07f450ca0e530ca36d06399208e]
+local_file.my_file: Destruction complete after 0s
+
+Destroy complete! Resources: 1 destroyed.
 ```
 
-**Key takeaway:** the full `init → validate → plan → apply → destroy` cycle worked end to end, and nothing ever gets created or destroyed without an explicit confirmation.
+**Key takeaway:** the full `init → validate → plan → apply → destroy` cycle worked end to end. Terraform tracked exactly what it created (via `terraform.tfstate`) and cleanly removed only that — nothing happens without an explicit `yes` confirmation at each destructive step.
 
 ---
 
